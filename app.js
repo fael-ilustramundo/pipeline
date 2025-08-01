@@ -1,10 +1,10 @@
-// ===== Azure Drive – app.js (versão corrigida) =====
+// ===== app.js corrigido =====
 
 // Bibliotecas globais já carregadas no index.html
 const { PublicClientApplication } = window.msal;
-const azblob = window.azureStorageBlob;
+const azblob = window.AzureStorageBlob;   // <- correção aqui
 
-// --- Configuração MSAL ---------------------------------------------------
+// --- Config MSAL --------------------------------------------------------
 const msalInstance = new PublicClientApplication({
   auth: {
     clientId: "8757d9f5-6832-4ab3-8c95-80c74dee6e56",
@@ -14,11 +14,11 @@ const msalInstance = new PublicClientApplication({
 });
 const scopes = ["https://storage.azure.com/user_impersonation"];
 
-// --- Parâmetros do Storage ----------------------------------------------
+// --- Storage ------------------------------------------------------------
 const accountName   = "ppldrive";
 const containerName = "pipeline";
 
-// --- Referências de UI ---------------------------------------------------
+// --- DOM ---------------------------------------------------------------
 const dom = {
   signin:  document.getElementById("signin"),
   signout: document.getElementById("signout"),
@@ -30,7 +30,6 @@ const dom = {
   progBox: document.getElementById("uploadProgress")
 };
 
-// ---------- Funções de interface ----------------------------------------
 function showUI(account) {
   const logged = !!account;
   dom.signin.classList.toggle("d-none", logged);
@@ -40,69 +39,66 @@ function showUI(account) {
   dom.user.textContent = logged ? account.username : "";
 }
 
-// ---------- Login / Logout ----------------------------------------------
+// --- Eventos -----------------------------------------------------------
 dom.signin.onclick  = () => signIn();
 dom.signout.onclick = () => signOut();
 dom.upload.onclick  = () => uploadFiles();
 
+// --- Autenticação -------------------------------------------------------
 async function signIn() {
   const result = await msalInstance.loginPopup({ scopes });
-  msalInstance.setActiveAccount(result.account);           // fixa conta ativa
+  msalInstance.setActiveAccount(result.account);      // fixa a conta
   showUI(result.account);
   await refreshList();
 }
 
 function signOut() {
   msalInstance.logoutPopup().then(() => {
-    msalInstance.setActiveAccount(null);                   // limpa conta ativa
+    msalInstance.setActiveAccount(null);
     showUI(null);
     dom.list.innerHTML = "";
   });
 }
 
-// ---------- Azure Storage helpers ---------------------------------------
+// --- Storage helpers ----------------------------------------------------
 async function getBlobService() {
   const account = msalInstance.getActiveAccount();
   if (!account) throw new Error("Nenhuma conta ativa – faça login primeiro.");
 
   const token = (await msalInstance.acquireTokenSilent({
     scopes,
-    account                                              // informa a conta
+    account
   })).accessToken;
 
-  const cred = new azblob.TokenCredential(token);
-  const url  = `https://${accountName}.blob.core.windows.net`;
-  return new azblob.BlobServiceClient(url, cred);
+  return new azblob.BlobServiceClient(
+    `https://${accountName}.blob.core.windows.net`,
+    new azblob.TokenCredential(token)
+  );
 }
 
-// ---------- Listagem de arquivos ----------------------------------------
+// --- Listagem -----------------------------------------------------------
 async function refreshList() {
   dom.list.innerHTML = "";
-  const svc  = await getBlobService();
-  const cont = svc.getContainerClient(containerName);
+  const cont = (await getBlobService()).getContainerClient(containerName);
 
   for await (const blob of cont.listBlobsFlat()) {
     const li = document.createElement("li");
-    li.className = "list-group-item d-flex justify-content-between align-items-center";
-
-    const a = document.createElement("a");
+    const a  = document.createElement("a");
     a.textContent = blob.name;
     a.href = `${cont.url}/${encodeURIComponent(blob.name)}`;
     a.target = "_blank";
-
     li.appendChild(a);
     dom.list.appendChild(li);
   }
 }
 
-// ---------- Upload -------------------------------------------------------
+// --- Upload -------------------------------------------------------------
 async function uploadFiles() {
   const files = dom.fileIn.files;
   if (!files.length) return;
 
   dom.progBox.classList.remove("d-none");
-  const svc  = await getBlobService();
-  const cont = svc.getContainerClient(containerName);
+  const cont = (await getBlobService()).getContainerClient(containerName);
 
   for (const file of files) {
     const block = cont.getBlockBlobClient(file.name);
@@ -120,7 +116,7 @@ async function uploadFiles() {
   await refreshList();
 }
 
-// ---------- Restaura sessão pré-existente -------------------------------
+// --- Restaurar sessão, se existir --------------------------------------
 const remembered = msalInstance.getAllAccounts()[0];
 if (remembered) {
   msalInstance.setActiveAccount(remembered);
