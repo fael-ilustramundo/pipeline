@@ -1,4 +1,4 @@
-import { PublicClientApplication } from "https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.37.0/dist/index.mjs";
+import { PublicClientApplication } from "https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.39.0/dist/index.js";
 
 // Configuração centralizada do MSAL
 export const msalConfig = {
