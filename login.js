@@ -1,18 +1,19 @@
-// Não há mais 'import', pois as variáveis são globais.
+document.addEventListener('DOMContentLoaded', function() {
+  // As variáveis `msalInstance` e `scopes` agora são lidas do objeto 'window'.
 
-document.getElementById("signin").onclick = async () => {
-  try {
-    const result = await msalInstance.loginPopup({ scopes });
-    msalInstance.setActiveAccount(result.account);
+  document.getElementById("signin").onclick = async () => {
+    try {
+      const result = await window.msalInstance.loginPopup({ scopes: window.scopes });
+      window.msalInstance.setActiveAccount(result.account);
+      window.location.href = "home.html";
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // Redireciona se já estiver logado
+  if (window.msalInstance && window.msalInstance.getAllAccounts().length > 0) {
+    window.msalInstance.setActiveAccount(window.msalInstance.getAllAccounts()[0]);
     window.location.href = "home.html";
-  } catch (error) {
-    console.error(error);
   }
-};
-
-// Redireciona para a home se já houver uma sessão ativa
-if (msalInstance.getAllAccounts().length > 0) {
-  // Garante que a conta ativa seja definida ao recarregar a página
-  msalInstance.setActiveAccount(msalInstance.getAllAccounts()[0]);
-  window.location.href = "home.html";
-}
+});
