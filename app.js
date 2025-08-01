@@ -21,8 +21,44 @@ const dom = {
   user:    document.getElementById("user"),
   fileIn:  document.getElementById("fileInput"),
   upload:  document.getElementById("uploadBtn"),
-  list:    document.getElementById("fileList")
+  list:    document.getElementById("fileList"),
+  bar:     document.querySelector("#uploadProgress .progress-bar"),
+  progBox: document.getElementById("uploadProgress")
 };
+
+function showUI(account) {
+  const logged = !!account;
+  dom.signin.classList.toggle("d-none", logged);
+  dom.signout.classList.toggle("d-none", !logged);
+  dom.fileIn.classList.toggle("d-none", !logged);
+  dom.upload.classList.toggle("d-none", !logged);
+  dom.user.textContent = logged ? account.username : "";
+}
+// ...
+async function uploadFiles() {
+  const files = dom.fileIn.files;
+  if (!files.length) return;
+  dom.progBox.classList.remove("d-none");
+
+  const svc  = await getBlobService();
+  const cont = svc.getContainerClient(containerName);
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const block = cont.getBlockBlobClient(file.name);
+    await block.uploadBrowserData(file, {
+      onProgress: ev => {
+        const pct = Math.round((ev.loadedBytes / file.size) * 100);
+        dom.bar.style.width = pct + "%";
+      },
+      blobHTTPHeaders: { blobContentType: file.type }
+    });
+  }
+
+  dom.bar.style.width = "0%";
+  dom.progBox.classList.add("d-none");
+  await refreshList();
+}
 
 dom.signin.onclick = () => signIn();
 dom.signout.onclick = () => signOut();
@@ -70,64 +106,21 @@ async function refreshList() {
   }
 }
 
-async function uploadFiles() {
-  const files = dom.fileIn.files;
-  if (!files.length) return;
-  const svc  = await getBlobService();
-  const cont = svc.getContainerClient(containerName);
-  for (const file of files) {
-    const block = cont.getBlockBlobClient(file.name);
-    await block.uploadBrowserData(file, { blobHTTPHeaders: { blobContentType: file.type }});
-  }
-  await refreshList();
-}
+// async function uploadFiles() {
+//   const files = dom.fileIn.files;
+//   if (!files.length) return;
+//   const svc  = await getBlobService();
+//   const cont = svc.getContainerClient(containerName);
+//   for (const file of files) {
+//     const block = cont.getBlockBlobClient(file.name);
+//     await block.uploadBrowserData(file, { blobHTTPHeaders: { blobContentType: file.type }});
+//   }
+//   await refreshList();
+// }
 
-showUI(msalInstance.getAllAccounts()[0]);
-if (msalInstance.getAllAccounts().length) refreshList();
+// showUI(msalInstance.getAllAccounts()[0]);
+// if (msalInstance.getAllAccounts().length) refreshList();
 
 
 // ...
-const dom = {
-  signin:  document.getElementById("signin"),
-  signout: document.getElementById("signout"),
-  user:    document.getElementById("user"),
-  fileIn:  document.getElementById("fileInput"),
-  upload:  document.getElementById("uploadBtn"),
-  list:    document.getElementById("fileList"),
-  bar:     document.querySelector("#uploadProgress .progress-bar"),
-  progBox: document.getElementById("uploadProgress")
-};
 
-function showUI(account) {
-  const logged = !!account;
-  dom.signin.classList.toggle("d-none", logged);
-  dom.signout.classList.toggle("d-none", !logged);
-  dom.fileIn.classList.toggle("d-none", !logged);
-  dom.upload.classList.toggle("d-none", !logged);
-  dom.user.textContent = logged ? account.username : "";
-}
-// ...
-async function uploadFiles() {
-  const files = dom.fileIn.files;
-  if (!files.length) return;
-  dom.progBox.classList.remove("d-none");
-
-  const svc  = await getBlobService();
-  const cont = svc.getContainerClient(containerName);
-
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    const block = cont.getBlockBlobClient(file.name);
-    await block.uploadBrowserData(file, {
-      onProgress: ev => {
-        const pct = Math.round((ev.loadedBytes / file.size) * 100);
-        dom.bar.style.width = pct + "%";
-      },
-      blobHTTPHeaders: { blobContentType: file.type }
-    });
-  }
-
-  dom.bar.style.width = "0%";
-  dom.progBox.classList.add("d-none");
-  await refreshList();
-}
