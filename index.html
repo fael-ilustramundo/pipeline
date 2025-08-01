@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Meu Drive no Azure</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Meu Drive no Azure</h1>
+
+  <button id="signin">Entrar</button>
+  <button id="signout" style="display:none">Sair</button>
+  <span id="user"></span>
+
+  <hr>
+
+  <input type="file" id="fileInput" multiple style="display:none">
+  <button id="uploadBtn" style="display:none">Enviar arquivo(s)</button>
+
+  <h2>Arquivos</h2>
+  <ul id="fileList"></ul>
+
+  <script src="https://alcdn.msauth.net/browser/2.37.0/js/msal-browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@azure/storage-blob@12.16.0/dist/browser/azure-storage-blob.min.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
