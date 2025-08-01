@@ -1,5 +1,6 @@
-import { PublicClientApplication } from "https://alcdn.msauth.net/browser/2.37.0/js/msal-browser.esm.min.js";
-import * as azblob from "https://cdn.jsdelivr.net/npm/@azure/storage-blob@12.16.0/+esm";
+// NÃO faça import ... from ...
+const { PublicClientApplication } = window.msal;
+const azblob = window.azureStorageBlob;   // objeto global criado pelo bundle
 
 const config = {
   auth: {
@@ -83,3 +84,50 @@ async function uploadFiles() {
 
 showUI(msalInstance.getAllAccounts()[0]);
 if (msalInstance.getAllAccounts().length) refreshList();
+
+
+// ...
+const dom = {
+  signin:  document.getElementById("signin"),
+  signout: document.getElementById("signout"),
+  user:    document.getElementById("user"),
+  fileIn:  document.getElementById("fileInput"),
+  upload:  document.getElementById("uploadBtn"),
+  list:    document.getElementById("fileList"),
+  bar:     document.querySelector("#uploadProgress .progress-bar"),
+  progBox: document.getElementById("uploadProgress")
+};
+
+function showUI(account) {
+  const logged = !!account;
+  dom.signin.classList.toggle("d-none", logged);
+  dom.signout.classList.toggle("d-none", !logged);
+  dom.fileIn.classList.toggle("d-none", !logged);
+  dom.upload.classList.toggle("d-none", !logged);
+  dom.user.textContent = logged ? account.username : "";
+}
+// ...
+async function uploadFiles() {
+  const files = dom.fileIn.files;
+  if (!files.length) return;
+  dom.progBox.classList.remove("d-none");
+
+  const svc  = await getBlobService();
+  const cont = svc.getContainerClient(containerName);
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const block = cont.getBlockBlobClient(file.name);
+    await block.uploadBrowserData(file, {
+      onProgress: ev => {
+        const pct = Math.round((ev.loadedBytes / file.size) * 100);
+        dom.bar.style.width = pct + "%";
+      },
+      blobHTTPHeaders: { blobContentType: file.type }
+    });
+  }
+
+  dom.bar.style.width = "0%";
+  dom.progBox.classList.add("d-none");
+  await refreshList();
+}
