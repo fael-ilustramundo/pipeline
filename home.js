@@ -1,18 +1,10 @@
-import { PublicClientApplication } from "https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.37.0/dist/msal-browser.esm.min.js";
+import { msalInstance } from "./auth.js";
 import * as azblob from "https://cdn.jsdelivr.net/npm/@azure/storage-blob@12.16.0/+esm";
 
 /* ----- CONFIG ------------------------------------------------------- */
-const accountName   = "ppldrive";
-const containerName = "pipeline";
-
-const msalInstance = new PublicClientApplication({
-  auth: {
-    clientId: "8757d9f5-6832-4ab3-8c95-80c74dee6e56",
-    authority: "https://login.microsoftonline.com/dfd0fc8b-d7a6-4326-84cd-4d000b55b9bb",
-    redirectUri: window.location.origin + "/home.html"
-  }
-});
-const scopes = ["https://storage.azure.com/user_impersonation"];
+const accountName   = "ppldrive"; // <<-- CONFIRME O NOME DA SUA CONTA DE STORAGE
+const containerName = "pipeline"; // <<-- CONFIRME O NOME DO SEU CONTAINER
+const sasTokenUrl   = "/api/get-sas-token";
 
 /* ----- GARANTE SESSÃO ------------------------------------------------ */
 const remembered = msalInstance.getAllAccounts()[0];
@@ -40,22 +32,22 @@ dom.signout.onclick = () => {
 };
 
 /* ----- HELPERS ------------------------------------------------------- */
-async function getBlobService() {
-  const token = (await msalInstance.acquireTokenSilent({
-    scopes,
-    account: msalInstance.getActiveAccount()
-  })).accessToken;
-
+async function getBlobServiceWithSas() {
+  const response = await fetch(sasTokenUrl);
+  if (!response.ok) {
+      throw new Error(`Falha ao obter o Token SAS: ${response.statusText}`);
+  }
+  const sasToken = await response.text();
   return new azblob.BlobServiceClient(
-    `https://${accountName}.blob.core.windows.net`,
-    new azblob.TokenCredential(token)
+    `https://${accountName}.blob.core.windows.net?${sasToken}`
   );
 }
 
 /* ----- LISTA --------------------------------------------------------- */
 async function refreshList() {
   dom.list.innerHTML = "";
-  const cont = (await getBlobService()).getContainerClient(containerName);
+  const blobService = await getBlobServiceWithSas();
+  const cont = blobService.getContainerClient(containerName);
 
   for await (const blob of cont.listBlobsFlat()) {
     const li = document.createElement("li");
@@ -76,7 +68,8 @@ dom.upload.onclick = async () => {
   if (!files.length) return;
 
   dom.progBox.classList.remove("d-none");
-  const cont = (await getBlobService()).getContainerClient(containerName);
+  const blobService = await getBlobServiceWithSas();
+  const cont = blobService.getContainerClient(containerName);
 
   for (const file of files) {
     const block = cont.getBlockBlobClient(file.name);
