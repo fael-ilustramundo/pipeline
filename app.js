@@ -2,7 +2,7 @@
 
 // Bibliotecas globais já carregadas no index.html
 const { PublicClientApplication } = window.msal;
-const azblob = window.AzureStorageBlob;   // <- correção aqui
+const azblob = window.azblob;   // <- correção aqui
 
 // --- Config MSAL --------------------------------------------------------
 const msalInstance = new PublicClientApplication({
