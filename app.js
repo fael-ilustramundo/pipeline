@@ -1,5 +1,3 @@
-Javascript
-Copiar
 // ===== Azure Drive – app.js (versão corrigida) =====
 
 // Bibliotecas globais já carregadas no index.html
