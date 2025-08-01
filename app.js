@@ -75,14 +75,14 @@ function signOut() {
   if (account) msalInstance.logoutPopup();
 }
 
-function showUI(account) {
-  const logged = !!account;
-  dom.signin.style.display  = logged ? "none" : "inline";
-  dom.signout.style.display = logged ? "inline" : "none";
-  dom.fileIn.style.display  = logged ? "inline" : "none";
-  dom.upload.style.display  = logged ? "inline" : "none";
-  dom.user.textContent      = logged ? account.username : "";
-}
+// function showUI(account) {
+//   const logged = !!account;
+//   dom.signin.style.display  = logged ? "none" : "inline";
+//   dom.signout.style.display = logged ? "inline" : "none";
+//   dom.fileIn.style.display  = logged ? "inline" : "none";
+//   dom.upload.style.display  = logged ? "inline" : "none";
+//   dom.user.textContent      = logged ? account.username : "";
+// }
 
 async function getBlobService() {
   const token = (await msalInstance.acquireTokenSilent({ scopes })).accessToken;
