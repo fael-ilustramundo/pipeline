@@ -1,7 +1,7 @@
-import { PublicClientApplication } from "https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.39.0/dist/index.js";
+// As bibliotecas agora são carregadas no HTML e criam objetos globais (ex: window.msal).
 
 // Configuração centralizada do MSAL
-export const msalConfig = {
+const msalConfig = {
   auth: {
     clientId: "8757d9f5-6832-4ab3-8c95-80c74dee6e56",
     authority: "https://login.microsoftonline.com/dfd0fc8b-d7a6-4326-84cd-4d000b55b9bb",
@@ -10,7 +10,8 @@ export const msalConfig = {
 };
 
 // Escopos necessários para a aplicação
-export const scopes = ["https://storage.azure.com/user_impersonation"];
+const scopes = ["https://storage.azure.com/user_impersonation"];
 
 // Instância única do PublicClientApplication
-export const msalInstance = new PublicClientApplication(msalConfig);
+// Note que agora usamos msal.PublicClientApplication, vindo do objeto global criado pelo script no HTML
+const msalInstance = new msal.PublicClientApplication(msalConfig);
