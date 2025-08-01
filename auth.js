@@ -1,5 +1,6 @@
-import { PublicClientApplication } from "https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.37.0/dist/msal-browser.esm.min.js";
+import { PublicClientApplication } from "https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.37.0/dist/index.mjs";
 
+// Configuração centralizada do MSAL
 export const msalConfig = {
   auth: {
     clientId: "8757d9f5-6832-4ab3-8c95-80c74dee6e56",
@@ -7,5 +8,9 @@ export const msalConfig = {
     redirectUri: window.location.origin + "/home.html"
   }
 };
+
+// Escopos necessários para a aplicação
 export const scopes = ["https://storage.azure.com/user_impersonation"];
+
+// Instância única do PublicClientApplication
 export const msalInstance = new PublicClientApplication(msalConfig);
